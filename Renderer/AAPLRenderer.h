@@ -10,5 +10,6 @@ Header for a platform independent renderer class, which performs Metal setup and
 @interface AAPLRenderer : NSObject<MTKViewDelegate>
 
 - (nonnull instancetype)initWithMetalKitView:(nonnull MTKView *)mtkView;
+- (void)setMousePos:(vector_float2)mousePos;
 
 @end

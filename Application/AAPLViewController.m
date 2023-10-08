@@ -13,6 +13,8 @@ Implementation of our cross-platform view controller
     MTKView *_view;
 
     AAPLRenderer *_renderer;
+    
+    vector_float2 mousePos;
 }
 
 - (void)viewDidLoad
@@ -34,6 +36,15 @@ Implementation of our cross-platform view controller
     [_renderer mtkView:_view drawableSizeWillChange:_view.drawableSize];
 
     _view.delegate = _renderer;
+}
+
+- (void)mouseDown:(NSEvent *)theEvent {
+    NSPoint mouseDownPos = [theEvent locationInWindow];
+    
+    vector_float2 p = {};
+    p.x = mouseDownPos.x;
+    p.y = mouseDownPos.y;
+    [_renderer setMousePos:p];
 }
 
 @end

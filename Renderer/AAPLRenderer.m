@@ -27,8 +27,11 @@ Implementation of a platform independent renderer class, which performs Metal se
 
     // The current size of the view, used as an input to the vertex shader.
     vector_uint2 _viewportSize;
+    
+    vector_float2 _mousePos;
 }
 
+double initTime;
 - (nonnull instancetype)initWithMetalKitView:(nonnull MTKView *)mtkView
 {
     self = [super init];
@@ -64,6 +67,7 @@ Implementation of a platform independent renderer class, which performs Metal se
         _commandQueue = [_device newCommandQueue];
     }
 
+    initTime = CACurrentMediaTime();
     return self;
 }
 
@@ -75,17 +79,34 @@ Implementation of a platform independent renderer class, which performs Metal se
     _viewportSize.y = size.height;
 }
 
+- (void)setMousePos:(vector_float2)mousePos {
+    initTime = CACurrentMediaTime();
+    
+    _mousePos = mousePos;
+    _mousePos = mousePos;
+}
+
 /// Called whenever the view needs to render a frame.
 - (void)drawInMTKView:(nonnull MTKView *)view
 {
+#if 1
     static const AAPLVertex triangleVertices[] =
     {
         // 2D positions,    RGBA colors
-        { {  250,  -250 }, { 1, 0, 0, 1 } },
-        { { -250,  -250 }, { 0, 1, 0, 1 } },
-        { {    0,   250 }, { 0, 0, 1, 1 } },
+        { { -1,   3 }, { 1, 0, 0, 1 } },
+        { { -1,  -1 }, { 0, 1, 0, 1 } },
+        { {  3,  -1 }, { 0, 0, 1, 1 } },
     };
-
+#else
+    static const AAPLVertex triangleVertices[] =
+    {
+        // 2D positions,    RGBA colors
+        { {  0.5,  -0.0 }, { 1, 0, 0, 1 } },
+        { { -0.0,  -0.0 }, { 0, 1, 0, 1 } },
+        { {  0.25,  0.5 }, { 0, 0, 1, 1 } },
+    };
+#endif
+    
     // Create a new command buffer for each render pass to the current drawable.
     id<MTLCommandBuffer> commandBuffer = [_commandQueue commandBuffer];
     commandBuffer.label = @"MyCommand";
@@ -110,9 +131,18 @@ Implementation of a platform independent renderer class, which performs Metal se
                                length:sizeof(triangleVertices)
                               atIndex:AAPLVertexInputIndexVertices];
         
-        [renderEncoder setVertexBytes:&_viewportSize
+        [renderEncoder setFragmentBytes:&_viewportSize
                                length:sizeof(_viewportSize)
                               atIndex:AAPLVertexInputIndexViewportSize];
+        
+        [renderEncoder setFragmentBytes:&_mousePos
+                               length:sizeof(_mousePos)
+                              atIndex:AAPLVertexInputIndexViewportSize+1];
+        
+        float lvalue = CACurrentMediaTime() - initTime;
+        [renderEncoder setFragmentBytes:&lvalue
+                               length:sizeof(lvalue)
+                              atIndex:AAPLVertexInputIndexViewportSize+2];
 
         // Draw the triangle.
         [renderEncoder drawPrimitives:MTLPrimitiveTypeTriangle
