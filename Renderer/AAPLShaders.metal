@@ -99,11 +99,50 @@ fragment float4 fragmentShader(
     float2 iMouse = vector_float2(*pMouse);
     float iTime = float(*pTime);
     
+//    float2 aspect = float2(1, 1);
+     float2 aspect = float2(1, iViewportSize.y/iViewportSize.x);
+    
+//    float2 uv = (in.color.xy * iViewportSize + 0.4) * 0.002 + iTime;
+    
+    
+    
+    
+//    float2 uv = ((in.color.xy + iTime*0.1) * aspect)*1.5;
+//    
+//    float2 grid;
+//    float h = INFINITY;
+//    float opacity = 0;
+//    
+//    grid = abs(fract((uv+0.25) * 6) - 0.5);
+//    if (min(grid.x, grid.y) < 0.035) {
+//        h = min(grid.x, grid.y);
+//        opacity = 0.4;
+//    }
+//    
+//    grid = abs(fract(uv * 3) - 0.5);
+//    if (min(grid.x, grid.y) < 0.035) {
+//        h = min(grid.x, grid.y);
+//        opacity = 0.6;
+//    }
+//    
+//    grid = abs(fract(uv) - 0.5);
+//    if (min(grid.x, grid.y) < 0.035) {
+//        h = min(grid.x, grid.y);
+//        opacity = 0.8;
+//    }
+//    
+//    float afwidth = length(float2(dfdx(h), dfdy(h))) * 0.70710678118654757;
+//    float col = smoothstep(0.035+afwidth, 0.035-afwidth, h);
+//    
+//    // return float4(float3(col), 1.0);
+//    return float4(float3(col), 1.0);
+    
+    
+    
     float dist;
     {
         /* extra /2 to account for hiDPI, LMAO */
 
-        float2 aspect = float2(1, iViewportSize.y/iViewportSize.x);
         float _dist = length(in.color.xy*aspect - (iMouse/iViewportSize*4 - 1)*aspect);
 
         float t = easeOutCubic(clamp(iTime/2, 0.0, 1.0));
@@ -123,13 +162,24 @@ fragment float4 fragmentShader(
     
     // return float4(float3(dist), 1);
         
-    float2 uv = (in.color.xy * iViewportSize + 0.4) * 0.005;
+    float2 uv = (in.color.xy * aspect)*10;
     
     float hex = aastep(-0.01, hexDist(uv, 0.2) - 0.5);
     
-    float2 _sqr = abs(fract(uv - 0.5) - 0.5);
-    float sqr = aastep(0, fmin(_sqr.x, _sqr.y) - 0.05);
-
+    float sqr = 0;
+    {
+        float2 _sqr = abs(fract(uv*2 - 0.5) - 0.5);
+        sqr = max(sqr, 0.4*aastep(0.0125, fmin(_sqr.x, _sqr.y)));
+    }
+    {
+        float2 _sqr = abs(fract(uv) - 0.5);
+        sqr = max(sqr, 0.6*aastep(0.0125, fmin(_sqr.x, _sqr.y)));
+    }
+    {
+        float2 _sqr = abs(fract(uv/3) - 0.5);
+        sqr = max(sqr, 0.8*aastep(0.005, fmin(_sqr.x, _sqr.y)));
+    }
+    
     float col = 0;
     col += sqr*(0 + dist);
     col += hex*(1 - dist);
